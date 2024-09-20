@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Layout</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  background-color: #333;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.body-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem 0rem 0rem 0rem  ;
+  background-color: #f0f0f0;
+}
+
+.footer {
+  background-color: #333;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .header, .footer {
+    padding: 0.5rem;
+  }
+
+  .body-content {
+    padding: 0.5rem;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header class="header">
+      <h6>Header Section</h6>
+    </header>
+
+    <div class="body-content d-flex flex-row">
+      <div class="h-100 border border-danger" style="width: 15vw;"></div>
+      <div class="h-100 border border-success w-100">
+        <div class="row h-25 m-0">
+            <div class="w-50 border border-info">AABC</div>
+            <div class="w-50 border border-warning">NKJNDS</div>
+        </div>
+        <div class="h-75 row m-0">
+            <div class="border border-warning border-3 h-100 col-4">
+                <div class="wrapper h-100">
+                    <div class="header"><h2>HEader</h2></div>
+                    <div class="body overflow-scroll">
+                        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Corporis nemo, nam modi odit aut dicta placeat quasi, perspiciatis vero similique itaque voluptate sunt eius quam iure quas, impedit ut. Tenetur, repellat rem. Voluptatibus ducimus quod natus, odit possimus dolorem consequatur eaque ut, doloremque dignissimos ullam neque exercitationem, itaque saepe illo. Dolore sed, deleniti quis delectus cum harum veniam voluptatem et earum cumque. Officia accusamus adipisci corrupti, sint doloribus rem vitae deleniti quod dicta perspiciatis deserunt odio saepe eaque repudiandae ipsa. Accusantium minima sunt dicta harum, modi vitae soluta, magnam odit delectus, expedita facilis provident! Necessitatibus blanditiis magnam ex consectetur molestias, aliquid laudantium ducimus temporibus qui accusamus totam voluptates obcaecati excepturi, assumenda quod cumque fugit pariatur quas! Et laudantium ipsum, nemo saepe ea, molestias odio vitae molestiae, amet ducimus nihil culpa similique ab maxime vel impedit? Repellendus nobis tempora nostrum consectetur earum quam incidunt. Aperiam fugit est officia sit, incidunt id alias debitis quos in placeat earum omnis maiores enim ullam vitae, repellat corrupti laudantium culpa! Adipisci ducimus magnam numquam? Est saepe debitis ullam dolores eligendi dicta facere corrupti, atque ipsa fuga, aut error iure nemo adipisci amet natus animi repellendus id aliquam, sapiente sequi accusamus accusantium nesciunt. Unde voluptatibus dolore, eius laboriosam saepe autem labore impedit officia sapiente, animi facilis asperiores tempora vitae hic, quasi natus pariatur? Distinctio, vero architecto explicabo nisi eligendi aperiam obcaecati assumenda illum, cupiditate, inventore ut natus magnam quae. Voluptate molestias pariatur autem, ea accusantium itaque. Dolorem aut minus et voluptatem ipsum dolorum sequi consequuntur fugit, adipisci asperiores. Repellendus quaerat fugit vero tenetur at. Repellendus nemo quas, nostrum eligendi consectetur culpa sunt commodi, accusamus officia aperiam neque suscipit ea exercitationem velit voluptatem nulla mollitia explicabo minima eum. Tempore vitae, ratione esse rem a dolorum deleniti ex iste recusandae facere. Numquam aperiam explicabo maiores dolores totam dolorem deserunt ab incidunt ipsum vero. Ducimus quod autem dolore ipsam exercitationem cumque, obcaecati voluptatem suscipit sed quaerat numquam quasi, excepturi reprehenderit ea deleniti quibusdam dolorum, recusandae explicabo deserunt nostrum ad iure sunt voluptatibus. Libero nulla sit consectetur rerum esse sapiente reiciendis, aperiam eligendi animi amet aliquam, soluta eos consequuntur tenetur quaerat fuga adipisci exercitationem voluptate totam veniam dolorum? Dignissimos vel iste minima aliquam molestiae beatae fugit similique animi a, ducimus impedit optio doloribus. Alias ipsum nobis at impedit inventore blanditiis voluptatibus vel nam natus fugit. Sunt dolore labore odio sed facilis animi repellat neque voluptate aut consequuntur, harum ipsam eaque alias dignissimos suscipit fugiat eum explicabo quisquam ducimus laudantium tempore ratione blanditiis autem aspernatur! Itaque tenetur nulla repudiandae distinctio, ab esse recusandae inventore quos facere aspernatur dignissimos iste, exercitationem ex officiis neque facilis suscipit nemo. Eos, cumque nostrum. Minima facere temporibus quod, quia ducimus saepe error earum quasi ab esse nesciunt adipisci vero libero nostrum perspiciatis recusandae voluptate illo assumenda nisi provident! Porro neque velit at tempora inventore pariatur iusto reprehenderit asperiores veritatis repudiandae sequi cumque quae quis beatae aperiam natus quas earum ex deleniti tempore modi, voluptatibus quasi facere. Officiis ullam molestiae esse deleniti incidunt hic tempore quaerat explicabo.
+                        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Saepe odit doloribus totam, recusandae enim amet laborum cum quia modi omnis eveniet vitae eligendi eos culpa fugit magnam dicta similique autem! Suscipit cum quo repellat similique facere aperiam quae soluta provident itaque consequatur. Nesciunt minima ipsum at atque eveniet temporibus cupiditate modi consequatur, aliquam magnam fuga earum quaerat eos nihil repellendus voluptas ab? Ea, nesciunt reprehenderit delectus aperiam facere quaerat labore quibusdam minima numquam repudiandae eos voluptates, vitae molestias cumque. Temporibus repellat est veritatis, voluptatem tempora nisi enim, reprehenderit maiores saepe sequi doloremque illo mollitia voluptatum, minima sit. Voluptates accusamus harum cupiditate modi quo est deserunt libero corporis sunt cum ullam ad nisi quibusdam, culpa, ducimus voluptate iure quis corrupti? Pariatur aliquid eaque ex, porro vero praesentium impedit eius dignissimos illo? Consequatur qui fuga dignissimos quasi veritatis modi eum enim non aut ratione tempora maiores molestias quia dicta accusantium minus doloremque fugiat sit odio illo, amet fugit! Facere molestiae placeat, cupiditate, eaque sit, soluta tenetur amet eos voluptatem aut velit officia sequi doloremque aliquam maxime dolorum corporis nesciunt rerum dolore illum in. Nobis harum id at, quibusdam quo, voluptates accusamus corporis consequatur repudiandae tempora omnis consectetur illo voluptatum enim quasi mollitia eius exercitationem ut perspiciatis, obcaecati qui alias adipisci? In ut quae accusantium sint beatae similique consectetur ea neque id, dicta voluptatum ratione ipsa odit hic amet explicabo dolorem nam provident, molestiae veritatis magnam eligendi. Vitae consectetur eos officiis nihil voluptatibus porro laudantium dolor, quas exercitationem illo deleniti aliquam ex nesciunt asperiores voluptatem impedit modi dolore necessitatibus id perspiciatis eligendi ipsum. Non at praesentium recusandae illum commodi nostrum illo vel. Nam libero corporis itaque, pariatur laudantium distinctio amet doloremque beatae. Saepe sequi eligendi dolorem dolor, illo natus aperiam porro, voluptate dolorum tempore nemo voluptatibus vero tenetur ab adipisci iste, neque error quos. Dolor maxime nemo assumenda neque! Iusto doloribus nisi molestias assumenda quod ullam dignissimos illum! Laudantium, quia ratione excepturi deleniti voluptatibus, fugit quidem accusamus obcaecati tenetur placeat optio nobis saepe voluptas reprehenderit? Nulla atque fuga ipsam alias. Non consequuntur suscipit tenetur itaque enim iste dolore nemo temporibus maiores ipsa totam accusamus neque laudantium, sint explicabo a tempore nesciunt aspernatur provident autem voluptatum esse molestias quam. Minima accusantium sapiente temporibus ex eos asperiores esse. Nam eligendi, necessitatibus velit vitae facilis aliquam quo provident molestiae voluptatem eum ad, debitis neque vel eius? Recusandae dolore cupiditate quis accusantium velit molestiae, doloremque vitae eum nostrum iste. Iste illum quia rerum, aspernatur unde alias illo ipsum eius dolore quidem reprehenderit magnam modi incidunt animi nesciunt quod eaque labore libero laudantium delectus, ea error similique quas. Expedita iste illum, sapiente laudantium eaque est eos vitae odit inventore perferendis in doloremque doloribus sunt rem. Quibusdam dicta soluta, fugiat temporibus ea aliquam quis, minus consequatur iste quos delectus placeat rem nemo repudiandae? Nemo omnis accusamus qui. A excepturi laborum quidem totam. Magnam placeat ullam vero est deleniti enim repudiandae, veniam ea dicta doloribus, inventore quae voluptas vitae eligendi assumenda consequuntur odit blanditiis maxime! Corrupti incidunt accusantium repellat voluptatibus.
+                    </div>
+                </div>
+                
+            </div>
+            <div class="border border-danger h-100 col-4 wrapper">
+                <div class="d-flex body overflow-scroll flex-wrap">
+                    <div class="card" style="width: 18rem;">
+                        <img src="..." class="card-img-top" alt="...">
+                        <div class="card-body">
+                          <h5 class="card-title">Card title</h5>
+                          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                          <a href="#" class="btn btn-primary">Go somewhere</a>
+                        </div>
+                      </div>
+                      <div class="card" style="width: 18rem;">
+                        <img src="..." class="card-img-top" alt="...">
+                        <div class="card-body">
+                          <h5 class="card-title">Card title</h5>
+                          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                          <a href="#" class="btn btn-primary">Go somewhere</a>
+                        </div>
+                      </div><div class="card" style="width: 18rem;">
+                        <img src="..." class="card-img-top" alt="...">
+                        <div class="card-body">
+                          <h5 class="card-title">Card title</h5>
+                          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                          <a href="#" class="btn btn-primary">Go somewhere</a>
+                        </div>
+                      </div>
+                </div>
+            </div>
+            <div class="border border-danger h-100 col-4 m-0 p-0 row">
+
+                <div class="border border-danger h-100 " style="width: 150px;"  ></div>
+                <div class="border border-success h-100" style="width:calc(100% - 300px)">adba</div>
+                <div class="border border-danger h-100" style="width: 150px;"></div>
+
+                
+            </div>
+            
+        </div>
+ 
+      </div>
+    </div>
+
+    <!-- <footer class="footer">
+      <p>Footer Section</p>
+    </footer> -->
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+</body>
+</html>
