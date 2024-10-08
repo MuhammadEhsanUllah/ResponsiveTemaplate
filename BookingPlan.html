@@ -1,50 +1,83 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
     <title>Seating Chart</title>
     <style>
         canvas {
             border: 1px solid #000;
         }
-        #info {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
-    <h1>Seating Chart</h1>
-    <canvas id="seatingChart" width="500" height="500"></canvas>
-    <div id="info">
-        <h2>Selected Seats</h2>
-        <ul id="selectedSeatsList"></ul>
-        <h3>Total Price: <span id="totalPrice">0</span></h3>
-        <input type="text" id="newSeatPrice" placeholder="Price" />
-        <button id="addSeatBtn">Add Seat</button>
+    <div class="container">
+        <h1>Seating Chart</h1>
+        <form id="seatForm">
+            <div class="mb-3">
+                <label for="rows" class="form-label">Number of Rows:</label>
+                <input type="number" id="rows" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="mb-3">
+                <label for="columns" class="form-label">Number of Columns:</label>
+                <input type="number" id="columns" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="mb-3">
+                <label for="defaultPrice" class="form-label">Default Seat Price:</label>
+                <input type="number" id="defaultPrice" class="form-control" value="100" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Seats</button>
+            <button type="button" id="loadSeatsBtn" class="btn btn-secondary">Load Seats</button>
+        </form>
+
+        <canvas id="seatingChart" width="800" height="600"></canvas>
+
+        <div id="info">
+            <h2>Selected Seats</h2>
+            <ul id="selectedSeatsList"></ul>
+            <h3>Total Price: <span id="totalPrice">0</span></h3>
+            <input type="text" id="newSeatPrice" placeholder="New Price" />
+            <button id="updateSeatBtn" class="btn btn-secondary">Update Price</button>
+            <button id="deleteSeatBtn" class="btn btn-danger">Delete Seat</button>
+        </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script>
         class Seat {
-            constructor(x, y, radius, price, id) {
+            constructor(x, y, radius, price, id, reserved = false) {
                 this.x = x;
                 this.y = y;
                 this.radius = radius;
                 this.price = price;
                 this.selected = false;
-                this.id = id; // Add a unique ID for each seat
+                this.reserved = reserved; // Reserved state
+                this.id = id; // Unique ID for each seat
             }
 
             draw(ctx) {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                ctx.fillStyle = this.selected ? '#FF6347' : '#00FF00';
+                ctx.fillStyle = this.reserved ? '#FF0000' : this.getColor(); // Red for reserved seats
                 ctx.fill();
                 ctx.closePath();
             }
 
+            getColor() {
+                if (this.price <= 100) return '#00FF00'; // Green
+                if (this.price <= 130) return '#90EE90'; // Light green
+                return '#FFA500'; // Orange
+            }
+
             toggleSelection() {
                 this.selected = !this.selected;
+            }
+
+            toggleReservation() {
+                this.reserved = !this.reserved;
             }
 
             updatePosition(x, y) {
@@ -54,10 +87,10 @@
         }
 
         class SeatingChart {
-            constructor(canvas, seatData) {
+            constructor(canvas) {
                 this.canvas = canvas;
                 this.ctx = this.canvas.getContext('2d');
-                this.seats = seatData.map(data => new Seat(data.x, data.y, data.radius, data.price, data.id));
+                this.seats = [];
                 this.selectedSeats = [];
                 this.init();
             }
@@ -67,6 +100,10 @@
                     const { x, y } = this.getMousePosition(e);
                     this.seats.forEach(seat => {
                         if (this.isInsideSeat(seat, x, y)) {
+                            if (seat.reserved) {
+                                alert('This seat is already reserved.');
+                                return;
+                            }
                             seat.toggleSelection();
                             this.updateSelectedSeats();
                             this.render();
@@ -74,27 +111,17 @@
                     });
                 });
 
-                this.canvas.addEventListener('mousedown', (e) => {
-                    const { x, y } = this.getMousePosition(e);
-                    this.seats.forEach(seat => {
-                        if (this.isInsideSeat(seat, x, y)) {
-                            this.selectedSeat = seat;
-                            this.offsetX = x - seat.x;
-                            this.offsetY = y - seat.y;
-                        }
-                    });
-                });
+                // this.canvas.addEventListener('mousemove', (e) => {
+                //     const { x, y } = this.getMousePosition(e);
+                //     this.seats.forEach(seat => {
+                //         if (this.isInsideSeat(seat, x, y)) {
+                //             this.showTooltip(seat, x, y);
+                //         }
+                //     });
+                // });
 
-                this.canvas.addEventListener('mousemove', (e) => {
-                    if (this.selectedSeat) {
-                        const { x, y } = this.getMousePosition(e);
-                        this.selectedSeat.updatePosition(x - this.offsetX, y - this.offsetY);
-                        this.render();
-                    }
-                });
-
-                this.canvas.addEventListener('mouseup', () => {
-                    this.selectedSeat = null;
+                this.canvas.addEventListener('mouseout', () => {
+                    this.hideTooltip();
                 });
 
                 this.render();
@@ -141,32 +168,690 @@
 
                 totalPrice.textContent = total;
             }
+
+            // showTooltip(seat, x, y) {
+            //     const tooltip = document.createElement('div');
+            //     tooltip.innerHTML = `
+            //         <strong>Seat ID:</strong> ${seat.id}<br>
+            //         <strong>Price:</strong> $${seat.price}<br>
+            //         <strong>Status:</strong> ${seat.reserved ? 'Reserved' : 'Available'}
+            //     `;
+            //     tooltip.classList.add('tooltip', 'bs-tooltip-end', 'tooltip-custom'); // Bootstrap tooltip classes
+            //     tooltip.style.position = 'absolute';
+            //     tooltip.style.left = `${x + 10}px`;
+            //     tooltip.style.top = `${y + 10}px`;
+            //     document.body.appendChild(tooltip);
+                
+            //     // Initialize Bootstrap tooltip
+            //     new bootstrap.Tooltip(tooltip, {
+            //         title: tooltip.innerHTML,
+            //         html: true,
+            //         trigger: 'manual',
+            //         placement: 'right',
+            //     }).show();
+
+            //     this.tooltip = tooltip; // Store tooltip reference
+            // }
+
+            hideTooltip() {
+                if (this.tooltip) {
+                    const tooltipInstance = bootstrap.Tooltip.getInstance(this.tooltip);
+                    if (tooltipInstance) tooltipInstance.hide();
+                    document.body.removeChild(this.tooltip);
+                    this.tooltip = null; // Clear tooltip reference
+                }
+            }
+
+            addSeat(x, y, price) {
+                const id = `S${this.seats.length + 1}`;
+                const newSeat = new Seat(x, y, 20, price, id);
+                this.seats.push(newSeat);
+                this.render();
+            }
+
+            deleteSeat() {
+                this.selectedSeats.forEach(seat => {
+                    const index = this.seats.indexOf(seat);
+                    if (index > -1) {
+                        this.seats.splice(index, 1);
+                    }
+                });
+                this.updateSelectedSeats();
+                this.render();
+                this.saveToLocalStorage(); // Save state after deletion
+            }
+
+            updateSeatPrice(price) {
+                this.selectedSeats.forEach(seat => {
+                    seat.price = price;
+                });
+                this.updateDisplay();
+                this.render();
+                this.saveToLocalStorage(); // Save state after price update
+            }
+
+            reserveSeats() {
+                this.selectedSeats.forEach(seat => {
+                    seat.toggleReservation(); // Toggle reservation status
+                });
+                this.updateDisplay();
+                this.render();
+                this.saveToLocalStorage(); // Save state after reservation
+            }
+
+            saveToLocalStorage() {
+                const seatsData = this.seats.map(seat => ({
+                    x: seat.x,
+                    y: seat.y,
+                    radius: seat.radius,
+                    price: seat.price,
+                    id: seat.id,
+                    reserved: seat.reserved
+                }));
+                localStorage.setItem('seats', JSON.stringify(seatsData));
+            }
+
+            loadFromLocalStorage() {
+                const storedSeats = JSON.parse(localStorage.getItem('seats'));
+                if (storedSeats) {
+                    this.seats = storedSeats.map(seat => new Seat(seat.x, seat.y, seat.radius, seat.price, seat.id, seat.reserved));
+                    this.render();
+                }
+            }
         }
 
-        // Initialize the seating chart
-        const canvas = document.getElementById('seatingChart');
-        const seatData = [
-            { x: 100, y: 100, radius: 20, price: 100, id: 'A1' },
-            { x: 200, y: 100, radius: 20, price: 150, id: 'A2' },
-            { x: 300, y: 100, radius: 20, price: 200, id: 'A3' },
-            { x: 150, y: 200, radius: 20, price: 120, id: 'B1' },
-            { x: 250, y: 200, radius: 20, price: 180, id: 'B2' }
-        ];
+        const chart = new SeatingChart(document.getElementById('seatingChart'));
 
-        const chart = new SeatingChart(canvas, seatData);
+        document.getElementById('seatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const rows = parseInt(document.getElementById('rows').value);
+            const columns = parseInt(document.getElementById('columns').value);
+            const defaultPrice = parseFloat(document.getElementById('defaultPrice').value);
 
-        // Add seat functionality
-        document.getElementById('addSeatBtn').addEventListener('click', () => {
-            const price = parseFloat(document.getElementById('newSeatPrice').value);
-            if (!isNaN(price)) {
-                const newSeat = new Seat(Math.random() * canvas.width, Math.random() * canvas.height, 20, price, `S${seatData.length + 1}`);
-                seatData.push({ x: newSeat.x, y: newSeat.y, radius: newSeat.radius, price: newSeat.price, id: newSeat.id });
-                chart.seats.push(newSeat);
-                chart.render();
-                document.getElementById('newSeatPrice').value = ''; // Clear input
-            } else {
-                alert('Please enter a valid price.');
+            const seatWidth = chart.canvas.width / columns;
+            const seatHeight = chart.canvas.height / rows;
+
+            // Generate seats based on rows and columns
+            chart.seats = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    chart.addSeat(seatWidth * (c + 0.5), seatHeight * (r + 0.5), defaultPrice);
+                }
             }
+            chart.render();
+            chart.saveToLocalStorage(); // Save initial state
+        });
+
+        // Load seats from local storage on button click
+        document.getElementById('loadSeatsBtn').addEventListener('click', () => {
+            chart.loadFromLocalStorage();
+        });
+
+        // Update selected seat price
+        document.getElementById('updateSeatBtn').addEventListener('click', () => {
+            const newPrice = parseFloat(document.getElementById('newSeatPrice').value);
+            if (!isNaN(newPrice)) {
+                chart.updateSeatPrice(newPrice);
+                document.getElementById('newSeatPrice').value = ''; // Reset input
+            }
+        });
+
+        // Delete selected seats
+        document.getElementById('deleteSeatBtn').addEventListener('click', () => {
+            chart.deleteSeat();
+        });
+
+        // Reserve selected seats on double-click
+        document.getElementById('seatingChart').addEventListener('dblclick', () => {
+            chart.reserveSeats();
+        });
+    </script>
+</body>
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
+    <title>Seating Chart</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Seating Chart</h1>
+        <form id="seatForm">
+            <div class="mb-3">
+                <label for="rows" class="form-label">Number of Rows:</label>
+                <input type="number" id="rows" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="mb-3">
+                <label for="columns" class="form-label">Number of Columns:</label>
+                <input type="number" id="columns" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="mb-3">
+                <label for="defaultPrice" class="form-label">Default Seat Price:</label>
+                <input type="number" id="defaultPrice" class="form-control" value="100" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Seats</button>
+            <button type="button" id="loadSeatsBtn" class="btn btn-secondary">Load Seats</button>
+        </form>
+
+        <canvas id="seatingChart" width="800" height="600"></canvas>
+
+        <div id="info">
+            <h2>Selected Seats</h2>
+            <ul id="selectedSeatsList"></ul>
+            <h3>Total Price: <span id="totalPrice">0</span></h3>
+            <input type="text" id="newSeatPrice" placeholder="New Price" />
+            <button id="updateSeatBtn" class="btn btn-secondary">Update Price</button>
+            <button id="deleteSeatBtn" class="btn btn-danger">Delete Seat</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class Seat {
+            constructor(x, y, radius, price, id, reserved = false) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.price = price;
+                this.selected = false;
+                this.reserved = reserved; // Reserved state
+                this.id = id; // Unique ID for each seat
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.reserved ? '#FF0000' : this.getColor(); // Red for reserved seats
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            getColor() {
+                if (this.price <= 100) return '#00FF00'; // Green
+                if (this.price <= 130) return '#90EE90'; // Light green
+                return '#FFA500'; // Orange
+            }
+
+            toggleSelection() {
+                this.selected = !this.selected;
+            }
+
+            toggleReservation() {
+                this.reserved = !this.reserved;
+            }
+
+            updatePosition(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
+        class SeatingChart {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = this.canvas.getContext('2d');
+                this.seats = [];
+                this.selectedSeats = [];
+                this.draggingSeat = null; // Currently dragging seat
+                this.offsetX = 0; // Offset for dragging
+                this.offsetY = 0; // Offset for dragging
+                this.init();
+            }
+
+            init() {
+                this.canvas.addEventListener('mousedown', (e) => {
+                    const { x, y } = this.getMousePosition(e);
+                    this.seats.forEach(seat => {
+                        if (this.isInsideSeat(seat, x, y)) {
+                            this.draggingSeat = seat;
+                            this.offsetX = x - seat.x;
+                            this.offsetY = y - seat.y;
+                            seat.toggleSelection();
+                            this.updateSelectedSeats();
+                            this.render();
+                        }
+                    });
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.draggingSeat) {
+                        const { x, y } = this.getMousePosition(e);
+                        this.draggingSeat.updatePosition(x - this.offsetX, y - this.offsetY);
+                        this.render();
+                    }
+                });
+
+                this.canvas.addEventListener('mouseup', () => {
+                    if (this.draggingSeat) {
+                        this.draggingSeat = null; // Stop dragging
+                        this.updateDisplay(); // Update display after moving
+                        this.saveToLocalStorage(); // Save state after moving
+                    }
+                });
+
+                this.canvas.addEventListener('mouseout', () => {
+                    this.hideTooltip();
+                });
+
+                this.render();
+            }
+
+            getMousePosition(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            isInsideSeat(seat, x, y) {
+                return Math.sqrt((x - seat.x) ** 2 + (y - seat.y) ** 2) < seat.radius;
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.seats.forEach(seat => seat.draw(this.ctx));
+            }
+
+            updateSelectedSeats() {
+                this.selectedSeats = this.seats.filter(seat => seat.selected);
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                const selectedSeatsList = document.getElementById('selectedSeatsList');
+                const totalPrice = document.getElementById('totalPrice');
+
+                // Clear the list
+                selectedSeatsList.innerHTML = '';
+
+                // Calculate total price
+                let total = 0;
+
+                this.selectedSeats.forEach(seat => {
+                    const li = document.createElement('li');
+                    li.textContent = `Seat ${seat.id}: $${seat.price}`;
+                    selectedSeatsList.appendChild(li);
+                    total += seat.price;
+                });
+
+                totalPrice.textContent = total;
+            }
+
+            addSeat(x, y, price) {
+                const id = `S${this.seats.length + 1}`;
+                const newSeat = new Seat(x, y, 20, price, id);
+                this.seats.push(newSeat);
+                this.render();
+            }
+
+            deleteSeat() {
+                this.selectedSeats.forEach(seat => {
+                    const index = this.seats.indexOf(seat);
+                    if (index > -1) {
+                        this.seats.splice(index, 1);
+                    }
+                });
+                this.updateSelectedSeats();
+                this.render();
+                this.saveToLocalStorage(); // Save state after deletion
+            }
+
+            updateSeatPrice(price) {
+                this.selectedSeats.forEach(seat => {
+                    seat.price = price;
+                });
+                this.updateDisplay();
+                this.render();
+                this.saveToLocalStorage(); // Save state after price update
+            }
+
+            reserveSeats() {
+                this.selectedSeats.forEach(seat => {
+                    seat.toggleReservation(); // Toggle reservation status
+                });
+                this.updateDisplay();
+                this.render();
+                this.saveToLocalStorage(); // Save state after reservation
+            }
+
+            saveToLocalStorage() {
+                const seatsData = this.seats.map(seat => ({
+                    x: seat.x,
+                    y: seat.y,
+                    radius: seat.radius,
+                    price: seat.price,
+                    id: seat.id,
+                    reserved: seat.reserved
+                }));
+                localStorage.setItem('seats', JSON.stringify(seatsData));
+            }
+
+            loadFromLocalStorage() {
+                const storedSeats = JSON.parse(localStorage.getItem('seats'));
+                if (storedSeats) {
+                    this.seats = storedSeats.map(seat => new Seat(seat.x, seat.y, seat.radius, seat.price, seat.id, seat.reserved));
+                    this.render();
+                }
+            }
+        }
+
+        const chart = new SeatingChart(document.getElementById('seatingChart'));
+
+        document.getElementById('seatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const rows = parseInt(document.getElementById('rows').value);
+            const columns = parseInt(document.getElementById('columns').value);
+            const price = parseInt(document.getElementById('defaultPrice').value);
+            const spacing = 50; // Space between seats
+
+            chart.seats = []; // Clear previous seats
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    const x = c * spacing + 50; // Offset for positioning
+                    const y = r * spacing + 50; // Offset for positioning
+                    chart.addSeat(x, y, price);
+                }
+            }
+            chart.render(); // Render the new layout
+            chart.saveToLocalStorage(); // Save state after generating seats
+        });
+
+        document.getElementById('loadSeatsBtn').addEventListener('click', () => {
+            chart.loadFromLocalStorage();
+        });
+
+        document.getElementById('updateSeatBtn').addEventListener('click', () => {
+            const newPrice = parseInt(document.getElementById('newSeatPrice').value);
+            if (!isNaN(newPrice)) {
+                chart.updateSeatPrice(newPrice);
+            }
+        });
+
+        document.getElementById('deleteSeatBtn').addEventListener('click', () => {
+            chart.deleteSeat();
+        });
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
+    <title>Seating Chart</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Seating Chart</h1>
+        <form id="seatForm">
+            <div class="mb-3">
+                <label for="rows" class="form-label">Number of Rows:</label>
+                <input type="number" id="rows" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="mb-3">
+                <label for="columns" class="form-label">Number of Columns:</label>
+                <input type="number" id="columns" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="mb-3">
+                <label for="defaultPrice" class="form-label">Default Seat Price:</label>
+                <input type="number" id="defaultPrice" class="form-control" value="100" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Seats</button>
+            <button type="button" id="loadSeatsBtn" class="btn btn-secondary">Load Seats</button>
+            <div class="mb-3">
+                <label for="selectAllseats" class="form-label">Select All</label>
+                <input type="checkbox" id="selectAllseats" class="form-control" >
+            </div>
+        </form>
+
+
+        <canvas id="seatingChart" width="800" height="600"></canvas>
+
+        <div id="info">
+            <h2>Selected Seats</h2>
+            <ul id="selectedSeatsList"></ul>
+            <h3>Total Price: <span id="totalPrice">0</span></h3>
+            <input type="text" id="newSeatPrice" placeholder="New Price" />
+            <button id="updateSeatBtn" class="btn btn-secondary">Update Price</button>
+            <button id="deleteSeatBtn" class="btn btn-danger">Delete Seat</button>
+        </div>
+
+        <div id="tooltip" class="tooltip" style="display:none;"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class Seat {
+            constructor(x, y, radius, price, id, reserved = false) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.price = price;
+                this.selected = false;
+                this.reserved = reserved; // Reserved state
+                this.id = id; // Unique ID for each seat
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.reserved ? '#FF0000' : this.getColor(); // Red for reserved seats
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            getColor() {
+                if (this.price <= 100) return '#00FF00'; // Green
+                if (this.price <= 130) return '#90EE90'; // Light green
+                return '#FFA500'; // Orange
+            }
+
+            toggleReservation() {
+                this.reserved = !this.reserved;
+            }
+        }
+
+        class SeatingChart {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = this.canvas.getContext('2d');
+                this.seats = [];
+                this.selectedSeats = [];
+                this.tooltip = document.getElementById('tooltip');
+                this.init();
+            }
+
+            init() {
+                this.canvas.addEventListener('mousedown', (e) => {
+                    const { x, y } = this.getMousePosition(e);
+                    this.seats.forEach(seat => {
+                        if (this.isInsideSeat(seat, x, y)) {
+                            seat.toggleReservation();
+                            this.updateSelectedSeats();
+                            this.render();
+                            this.showTooltip(seat, x, y);
+                        }
+                    });
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const { x, y } = this.getMousePosition(e);
+                    if (!this.isInsideSeat(seat, x, y)) {
+                        this.hideTooltip();
+                    }
+                });
+
+                this.canvas.addEventListener('mouseup', () => {
+                    this.hideTooltip();
+                });
+
+                this.render();
+            }
+
+            getMousePosition(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            isInsideSeat(seat, x, y) {
+                return Math.sqrt((x - seat.x) ** 2 + (y - seat.y) ** 2) < seat.radius;
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.seats.forEach(seat => seat.draw(this.ctx));
+            }
+
+            showTooltip(seat, x, y) {
+                this.tooltip.innerHTML = `Seat ${seat.id} is reserved`;
+                this.tooltip.style.left = `${x + 10}px`;
+                this.tooltip.style.top = `${y + 10}px`;
+                this.tooltip.style.display = 'block';
+            }
+
+            hideTooltip() {
+                this.tooltip.style.display = 'none';
+            }
+
+            updateSelectedSeats() {
+                this.selectedSeats = this.seats.filter(seat => seat.reserved);
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                const selectedSeatsList = document.getElementById('selectedSeatsList');
+                const totalPrice = document.getElementById('totalPrice');
+
+                // Clear the list
+                selectedSeatsList.innerHTML = '';
+
+                // Calculate total price
+                let total = 0;
+
+                this.selectedSeats.forEach(seat => {
+                    const li = document.createElement('li');
+                    li.textContent = `Seat ${seat.id}: $${seat.price}`;
+                    selectedSeatsList.appendChild(li);
+                    total += seat.price;
+                });
+
+                totalPrice.textContent = total;
+            }
+
+            addSeat(x, y, price) {
+                const id = `S${this.seats.length + 1}`;
+                const newSeat = new Seat(x, y, 20, price, id);
+                this.seats.push(newSeat);
+                this.render();
+            }
+
+            deleteSeat() {
+                this.selectedSeats.forEach(seat => {
+                    const index = this.seats.indexOf(seat);
+                    if (index > -1) {
+                        this.seats.splice(index, 1);
+                    }
+                });
+                this.updateSelectedSeats();
+                this.render();
+                this.saveToLocalStorage(); // Save state after deletion
+            }
+
+            updateSeatPrice(price) {
+                this.selectedSeats.forEach(seat => {
+                    seat.price = price;
+                });
+                this.updateDisplay();
+                this.render();
+                this.saveToLocalStorage(); // Save state after price update
+            }
+
+            saveToLocalStorage() {
+                const seatsData = this.seats.map(seat => ({
+                    x: seat.x,
+                    y: seat.y,
+                    radius: seat.radius,
+                    price: seat.price,
+                    id: seat.id,
+                    reserved: seat.reserved
+                }));
+                localStorage.setItem('seats', JSON.stringify(seatsData));
+            }
+
+            loadFromLocalStorage() {
+                const storedSeats = JSON.parse(localStorage.getItem('seats'));
+                if (storedSeats) {
+                    this.seats = storedSeats.map(seat => new Seat(seat.x, seat.y, seat.radius, seat.price, seat.id, seat.reserved));
+                    this.render();
+                }
+            }
+        }
+
+        const chart = new SeatingChart(document.getElementById('seatingChart'));
+
+        document.getElementById('seatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const rows = parseInt(document.getElementById('rows').value);
+            const columns = parseInt(document.getElementById('columns').value);
+            const price = parseInt(document.getElementById('defaultPrice').value);
+            const spacing = 50; // Space between seats
+
+            chart.seats = []; // Clear previous seats
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    const x = c * spacing + 50; // Offset for positioning
+                    const y = r * spacing + 50; // Offset for positioning
+                    chart.addSeat(x, y, price);
+                }
+            }
+            chart.render(); // Render the new layout
+            chart.saveToLocalStorage(); // Save state after generating seats
+        });
+
+        document.getElementById('loadSeatsBtn').addEventListener('click', () => {
+            chart.loadFromLocalStorage();
+        });
+
+        document.getElementById('updateSeatBtn').addEventListener('click', () => {
+            const newPrice = parseInt(document.getElementById('newSeatPrice').value);
+            if (!isNaN(newPrice)) {
+                chart.updateSeatPrice(newPrice);
+            }
+        });
+
+        document.getElementById('deleteSeatBtn').addEventListener('click', () => {
+            chart.deleteSeat();
         });
     </script>
 </body>
