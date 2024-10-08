@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Chart</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+        #info {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Seating Chart</h1>
+    <canvas id="seatingChart" width="500" height="500"></canvas>
+    <div id="info">
+        <h2>Selected Seats</h2>
+        <ul id="selectedSeatsList"></ul>
+        <h3>Total Price: <span id="totalPrice">0</span></h3>
+        <input type="text" id="newSeatPrice" placeholder="Price" />
+        <button id="addSeatBtn">Add Seat</button>
+    </div>
+
+    <script>
+        class Seat {
+            constructor(x, y, radius, price, id) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.price = price;
+                this.selected = false;
+                this.id = id; // Add a unique ID for each seat
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.selected ? '#FF6347' : '#00FF00';
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            toggleSelection() {
+                this.selected = !this.selected;
+            }
+
+            updatePosition(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
+        class SeatingChart {
+            constructor(canvas, seatData) {
+                this.canvas = canvas;
+                this.ctx = this.canvas.getContext('2d');
+                this.seats = seatData.map(data => new Seat(data.x, data.y, data.radius, data.price, data.id));
+                this.selectedSeats = [];
+                this.init();
+            }
+
+            init() {
+                this.canvas.addEventListener('click', (e) => {
+                    const { x, y } = this.getMousePosition(e);
+                    this.seats.forEach(seat => {
+                        if (this.isInsideSeat(seat, x, y)) {
+                            seat.toggleSelection();
+                            this.updateSelectedSeats();
+                            this.render();
+                        }
+                    });
+                });
+
+                this.canvas.addEventListener('mousedown', (e) => {
+                    const { x, y } = this.getMousePosition(e);
+                    this.seats.forEach(seat => {
+                        if (this.isInsideSeat(seat, x, y)) {
+                            this.selectedSeat = seat;
+                            this.offsetX = x - seat.x;
+                            this.offsetY = y - seat.y;
+                        }
+                    });
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.selectedSeat) {
+                        const { x, y } = this.getMousePosition(e);
+                        this.selectedSeat.updatePosition(x - this.offsetX, y - this.offsetY);
+                        this.render();
+                    }
+                });
+
+                this.canvas.addEventListener('mouseup', () => {
+                    this.selectedSeat = null;
+                });
+
+                this.render();
+            }
+
+            getMousePosition(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            isInsideSeat(seat, x, y) {
+                return Math.sqrt((x - seat.x) ** 2 + (y - seat.y) ** 2) < seat.radius;
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.seats.forEach(seat => seat.draw(this.ctx));
+            }
+
+            updateSelectedSeats() {
+                this.selectedSeats = this.seats.filter(seat => seat.selected);
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                const selectedSeatsList = document.getElementById('selectedSeatsList');
+                const totalPrice = document.getElementById('totalPrice');
+
+                // Clear the list
+                selectedSeatsList.innerHTML = '';
+
+                // Calculate total price
+                let total = 0;
+
+                this.selectedSeats.forEach(seat => {
+                    const li = document.createElement('li');
+                    li.textContent = `Seat ${seat.id}: $${seat.price}`;
+                    selectedSeatsList.appendChild(li);
+                    total += seat.price;
+                });
+
+                totalPrice.textContent = total;
+            }
+        }
+
+        // Initialize the seating chart
+        const canvas = document.getElementById('seatingChart');
+        const seatData = [
+            { x: 100, y: 100, radius: 20, price: 100, id: 'A1' },
+            { x: 200, y: 100, radius: 20, price: 150, id: 'A2' },
+            { x: 300, y: 100, radius: 20, price: 200, id: 'A3' },
+            { x: 150, y: 200, radius: 20, price: 120, id: 'B1' },
+            { x: 250, y: 200, radius: 20, price: 180, id: 'B2' }
+        ];
+
+        const chart = new SeatingChart(canvas, seatData);
+
+        // Add seat functionality
+        document.getElementById('addSeatBtn').addEventListener('click', () => {
+            const price = parseFloat(document.getElementById('newSeatPrice').value);
+            if (!isNaN(price)) {
+                const newSeat = new Seat(Math.random() * canvas.width, Math.random() * canvas.height, 20, price, `S${seatData.length + 1}`);
+                seatData.push({ x: newSeat.x, y: newSeat.y, radius: newSeat.radius, price: newSeat.price, id: newSeat.id });
+                chart.seats.push(newSeat);
+                chart.render();
+                document.getElementById('newSeatPrice').value = ''; // Clear input
+            } else {
+                alert('Please enter a valid price.');
+            }
+        });
+    </script>
+</body>
+</html>
